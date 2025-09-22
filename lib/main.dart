@@ -29,6 +29,19 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   int happinessLevel = 50;
   int hungerLevel = 50;
 
+  // temporary holder for the text input
+  String _tempName = '';
+
+  // simple handler to confirm the name
+  void _setPetName() {
+    final name = _tempName.trim();
+    if (name.isNotEmpty) {
+      setState(() {
+        petName = name;
+      });
+    }
+  }
+
   void _playWithPet() {
     setState(() {
       happinessLevel += 10;
@@ -71,6 +84,23 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            // text field + button to set the name
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: TextField(
+                onChanged: (value) => _tempName = value,
+                decoration: const InputDecoration(
+                  labelText: 'Enter pet name',
+                ),
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            ElevatedButton(
+              onPressed: _setPetName,
+              child: const Text('Confirm Name'),
+            ),
+            const SizedBox(height: 24.0),
+
             Text(
               'Name: $petName',
               style: TextStyle(fontSize: 20.0),
