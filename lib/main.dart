@@ -29,6 +29,8 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   int happinessLevel = 50;
   int hungerLevel = 50;
 
+  final String catImageUrl = 'https://www.vhv.rs/dpng/d/28-287493_orange-cat-png-transparent-png.png';
+
   // temporary holder for the text input
   String _tempName = '';
 
@@ -84,6 +86,11 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Image.network(
+              catImageUrl,
+              width: 220,
+              height: 220,
+              fit: BoxFit.contain,),
             // text field + button to set the name
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
