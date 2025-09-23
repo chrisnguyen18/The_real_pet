@@ -29,6 +29,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   String petName = "Your Pet";
   int happinessLevel = 50;
   int hungerLevel = 50;
+  int energyLevel = 50;
 
   final String catImageUrl = 'https://www.vhv.rs/dpng/d/28-287493_orange-cat-png-transparent-png.png';
 
@@ -50,14 +51,14 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     return Colors.red;
   }
 
-  // NEW: text label for mood
+  // text label for mood
   String _moodLabel() {
     if (happinessLevel > 70) return 'Happy';
     if (happinessLevel >= 30) return 'Neutral';
     return 'Unhappy';
   }
 
-  // NEW: emoji for mood
+  // emoji for mood
   String _moodEmoji() {
     if (happinessLevel > 70) return '😀';
     if (happinessLevel >= 30) return '😐';
@@ -94,6 +95,8 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   void _playWithPet() {
     setState(() {
       happinessLevel += 10;
+      //Plating uses energy
+      energyLevel = (energyLevel - 5).clamp(0, 100).toInt();
       _updateHunger();
     });
     _checkWinLoss();
@@ -102,6 +105,8 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   void _feedPet() {
     setState(() {
       hungerLevel -= 10;
+      //Feeding restores a little bit of energy
+      energyLevel = (energyLevel + 5).clamp(0, 100).toInt();
       _updateHappiness();
     });
     _checkWinLoss();
@@ -173,6 +178,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
               setState(() {
                 happinessLevel = 50;
                 hungerLevel = 50;
+                energyLevel = 50;
               });
               _lossShown = false;
               _winShown = false;
@@ -271,6 +277,16 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
             Text(
               'Hunger Level: $hungerLevel',
               style: TextStyle(fontSize: 20.0),
+            ),
+            //Energy text + progress bar
+            const SizedBox(height: 16.0),
+            Text('Energy: $energyLevel', style: const TextStyle(fontSize: 20.0)),
+            const SizedBox(height: 6.0),
+            SizedBox(
+              width: 240,
+              child: LinearProgressIndicator(
+                value: (energyLevel.clamp(0, 100)) / 100,
+              ),
             ),
             SizedBox(height: 32.0),
             ElevatedButton(
