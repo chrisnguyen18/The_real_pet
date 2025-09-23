@@ -12,6 +12,7 @@
 //name pet, and button
 
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 void main() {
   runApp(MaterialApp(
@@ -34,6 +35,14 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   // temporary holder for the text input
   String _tempName = '';
 
+  // timer to auto-increase hunger over time
+  Timer? _hungerTimer;
+
+  //timer/flags for win/loss
+  Timer? _winTimer;  
+  bool _winShown = false;
+  bool _lossShown = false;
+
   // Color based on happiness
   Color _moodColor() {
     if (happinessLevel > 70) return Colors.green;
@@ -55,6 +64,22 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     return '😞';
   }
 
+  //start/stop the periodic hunger increase
+  @override
+  void initState() {
+    super.initState();
+    _hungerTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      _updateHunger(); // every 30s, hunger rises (and may affect happiness)
+    });
+  }
+
+  @override
+  void dispose() {
+    _hungerTimer?.cancel();
+    _winTimer?.cancel();
+    super.dispose();
+  }
+
   // simple handler to confirm the name
   void _setPetName() {
     final name = _tempName.trim();
@@ -62,6 +87,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
       setState(() {
         petName = name;
       });
+      _checkWinLoss();
     }
   }
 
@@ -70,6 +96,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
       happinessLevel += 10;
       _updateHunger();
     });
+    _checkWinLoss();
   }
 
   void _feedPet() {
@@ -77,6 +104,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
       hungerLevel -= 10;
       _updateHappiness();
     });
+    _checkWinLoss();
   }
 
   void _updateHappiness() {
@@ -85,6 +113,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     } else {
       happinessLevel += 10;
     }
+    _checkWinLoss();
   }
 
   void _updateHunger() {
@@ -95,6 +124,67 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
         happinessLevel -= 20;
       }
     });
+    _checkWinLoss();
+  }
+
+  // central win/loss checker (call after any change)
+  void _checkWinLoss() {
+    if (!mounted) return;
+
+    // LOSS
+    if (!_lossShown && hungerLevel >= 100 && happinessLevel <= 10) {
+      _lossShown = true;
+      _winTimer?.cancel();
+      _hungerTimer?.cancel();
+      _showEndDialog(title: 'Game Over', message: 'Your pet became too hungry and unhappy.');
+      return;
+    }
+
+    // WIN
+    if (happinessLevel > 80) {
+      _winTimer ??= Timer(const Duration(minutes: 3), () {
+        if (!mounted) return;
+        if (!_winShown && !_lossShown && happinessLevel > 80) {
+          _winShown = true;
+          _hungerTimer?.cancel();
+          _showEndDialog(title: 'You Win!', message: 'You kept your pet happy for 3 minutes!');
+        }
+      });
+    } else {
+      // happiness dropped to 80 or below -> cancel any running win timer
+      _winTimer?.cancel();
+      _winTimer = null;
+    }
+  }
+
+  // helper to show end-game dialog
+  void _showEndDialog({required String title, required String message}) {
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // reset to play again
+              setState(() {
+                happinessLevel = 50;
+                hungerLevel = 50;
+              });
+              _lossShown = false;
+              _winShown = false;
+              _hungerTimer ??= Timer.periodic(const Duration(seconds: 30), (_) => _updateHunger());
+              _winTimer?.cancel();
+              _winTimer = null;
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
